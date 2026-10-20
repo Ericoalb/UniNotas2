@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: UniNotas
+  datasource:
+    url: jdbc:postgresql://localhost:5432/uninotas?createDatabaseIfNotExist=true
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+     ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
