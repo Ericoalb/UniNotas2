@@ -6,11 +6,9 @@ import br.com.edge.UniNotas.database.model.StudentEntity;
 import br.com.edge.UniNotas.database.repository.IClassRepository;
 import br.com.edge.UniNotas.database.repository.ICollegeRepository;
 import br.com.edge.UniNotas.dto.ClassDto;
-import br.com.edge.UniNotas.dto.CollegeDto;
 import br.com.edge.UniNotas.dto.StudentDto;
 import br.com.edge.UniNotas.exception.BadRequestException;
 import br.com.edge.UniNotas.exception.NotFoundException;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,117 +21,97 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ClassService {
 
-
     private final ICollegeRepository collegeRepository;
     private final IClassRepository classRepository;
 
     @Transactional
-    public void save(ClassDto classDto) throws BadRequestException, NotFoundException {
-
+    public void saveClass(ClassDto classDto) throws BadRequestException, NotFoundException {
+        // Verifica se a faculdade existe antes de cadastrar a turma
         CollegeEntity collegeEntity = collegeRepository.findByName(classDto.getName());
-
-        if(collegeEntity == null)
-        {
+        if (collegeEntity == null) {
             throw new NotFoundException("Não é possível cadastrar uma turma em uma faculdade não registrada no sistema");
         }
 
         List<ClassEntity> listClass = collegeEntity.getClassList();
-        if(listClass == null) listClass = new ArrayList<>();
+        if (listClass == null) listClass = new ArrayList<>();
 
         Optional<ClassEntity> find = listClass.stream()
-                .filter(item -> classDto.getCourse().equals(item.getCourse()))
+                .filter(item -> classDto.getCourse().equalsIgnoreCase(item.getCourse()))
                 .findFirst();
 
-        if(find.isPresent())
-        {
+        if (find.isPresent()) {
             throw new BadRequestException("Turma já cadastrada nesta faculdade");
         }
 
         ClassEntity classEntity = ClassEntity.builder()
                 .name(classDto.getName())
                 .course(classDto.getCourse())
-                .college(collegeEntity).build();
+                .college(collegeEntity)
+                .build();
 
         classRepository.save(classEntity);
-
     }
 
-    public void delete(Integer id) throws NotFoundException {
-
-       ClassEntity classEntity = classRepository.findById(id)
-                .orElseThrow(() ->new NotFoundException("Turma informada não cadastrada no sistema"));
-
+    public void deleteClass(Integer id) throws NotFoundException {
+        ClassEntity classEntity = classRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Turma informada não cadastrada no sistema"));
 
         if (classEntity.getCollege() != null) {
             classEntity.getCollege().getClassList().remove(classEntity);
         }
 
-       classRepository.delete(classEntity);
+        classRepository.delete(classEntity);
     }
 
-    public List<ClassDto> findAll()
-    {
-        List<ClassEntity> listClass = classRepository.findAll();
-        List<ClassDto> listClassDto = new ArrayList<>();
-
-        for(Integer i = 0; i < listClass.size(); i++)
-        {
-            ClassEntity classEntity = listClass.get(i);
-            ClassDto classDto = ClassDto.builder()
-                    .name(classEntity.getName())
-                    .course(classEntity.getCourse())
-                    .build();
-
-            listClassDto.add(classDto);
-        }
-
-        return listClassDto;
+    public List<ClassDto> findAllClasses() {
+        return classRepository.findAll().stream()
+                .map(this::toDto)
+                .toList();
     }
 
-
-    public void update(Integer id, ClassDto classDto) throws NotFoundException {
-
+    public void updateClass(Integer id, ClassDto classDto) throws NotFoundException {
         ClassEntity classEntity = classRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Classe não cadastrada"));
 
-
+        // Verifica se a faculdade existe antes de atualizar
         CollegeEntity collegeEntity = collegeRepository.findByName(classDto.getName());
+        if (collegeEntity == null) {
+            throw new NotFoundException("Faculdade informada não está cadastrada no sistema");
+        }
 
         classEntity.setName(classDto.getName());
         classEntity.setCourse(classDto.getCourse());
         classEntity.setCollege(collegeEntity);
         classRepository.save(classEntity);
-
     }
 
-
-    public List<StudentDto> listStudent(Integer id) throws NotFoundException {
+    public List<StudentDto> listStudentsByClassId(Integer id) throws NotFoundException {
         ClassEntity classEntity = classRepository.findById(id)
-                .orElseThrow(()-> new NotFoundException("Turma não cadastrada"));
+                .orElseThrow(() -> new NotFoundException("Turma não cadastrada"));
 
         List<StudentEntity> studentEntityList = classEntity.getStudentList();
 
-        if(studentEntityList.isEmpty())
-        {
+        if (studentEntityList == null || studentEntityList.isEmpty()) {
             throw new NotFoundException("Nenhum estudante cadastrado na turma");
         }
 
-        List<StudentDto> studentDtoList = new ArrayList<>();
+        return studentEntityList.stream()
+                .map(student -> StudentDto.builder()
+                        .id(student.getId())
+                        .name(student.getName())
+                        .email(student.getEmail())
+                        .matricula(student.getMatricula())
+                        .college(student.getCollege())
+                        .course(student.getCourse())
+                        .build())
+                .toList();
+    }
 
-        for(int i = 0; i < studentEntityList.size(); i++)
-        {
-            StudentEntity studentEntity = studentEntityList.get(i);
-            StudentDto studentDto = StudentDto.builder()
-                    .name(studentEntity.getName())
-                    .email(studentEntity.getEmail())
-                    .matricula(studentEntity.getMatricula())
-                    .college(studentEntity.getCollege())
-                    .course(studentEntity.getCourse())
-                    .build();
-
-            studentDtoList.add(studentDto);
-        }
-
-        return studentDtoList;
+    private ClassDto toDto(ClassEntity classEntity) {
+        return ClassDto.builder()
+                .id(classEntity.getId())
+                .name(classEntity.getName())
+                .course(classEntity.getCourse())
+                .build();
     }
 }

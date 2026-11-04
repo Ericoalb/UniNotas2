@@ -13,36 +13,34 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/student")
+@RequestMapping("/v1/students")
 @RequiredArgsConstructor
 @Validated
 public class StudentController {
 
     private final StudentService studentService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public void save(@Valid @RequestBody StudentDto studentDto) throws NotFoundException, BadRequestException {
-        studentService.save(studentDto);
-    }
-
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<StudentDto> findAll()
-    {
-        return studentService.findAll();
+    public List<StudentDto> findAllStudents() {
+        return studentService.findAllStudents();
     }
 
-    @PostMapping("/update/{id}")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void update(@PathVariable Integer id, @Valid @RequestBody StudentDto studentDto) throws NotFoundException, BadRequestException {
-        studentService.update(studentDto, id);
+    public void saveStudent(@Valid @RequestBody StudentDto studentDto) throws NotFoundException, BadRequestException {
+        studentService.saveStudent(studentDto);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateStudent(@PathVariable Integer id, @Valid @RequestBody StudentDto studentDto) throws NotFoundException, BadRequestException {
+        studentService.updateStudent(studentDto, id);
+    }
+
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) throws NotFoundException {
-        studentService.delete(id);
+    public void deleteStudent(@PathVariable Integer id) throws NotFoundException {
+        studentService.deleteStudent(id);
     }
-
 }

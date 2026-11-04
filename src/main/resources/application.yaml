@@ -3,12 +3,19 @@ spring:
     name: UniNotas
   datasource:
     url: jdbc:postgresql://localhost:5432/uninotas?createDatabaseIfNotExist=true
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
   jpa:
     hibernate:
-     ddl-auto: update
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+  jwt:
+    expiration: ${JWT_EXPIRATION:86400000}
+    key: ${JWT_KEY:chaveSecretaSuperSeguraParaAssinaturaDoTokenJwtUniNotas2026ComMaisDe256Bits}
+
+jwt:
+  expiration: ${JWT_EXPIRATION:86400000}
+  key: ${JWT_KEY:chaveSecretaSuperSeguraParaAssinaturaDoTokenJwtUniNotas2026ComMaisDe256Bits}

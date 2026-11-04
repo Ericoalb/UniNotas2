@@ -1,6 +1,5 @@
 package br.com.edge.UniNotas.service;
 
-
 import br.com.edge.UniNotas.database.model.ClassEntity;
 import br.com.edge.UniNotas.database.model.CollegeEntity;
 import br.com.edge.UniNotas.database.model.StudentEntity;
@@ -13,7 +12,6 @@ import br.com.edge.UniNotas.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,21 +22,23 @@ public class StudentService {
     private final IClassRepository classRepository;
     private final ICollegeRepository collegeRepository;
 
-
-    public void save(StudentDto studentDto) throws NotFoundException, BadRequestException
-    {
+    public void saveStudent(StudentDto studentDto) throws NotFoundException, BadRequestException {
         StudentEntity studentEntity = studentyRepository.findByEmail(studentDto.getEmail());
 
-        if(studentEntity != null)
-        {
+        if (studentEntity != null) {
             throw new BadRequestException("Aluno já cadastrado no sistema");
         }
 
-        ClassEntity classEntity = classRepository.findByNameAndCourse(studentDto.getCollege(), studentDto.getCourse());
+        // Verifica se a faculdade existe
+        CollegeEntity collegeEntity = collegeRepository.findByName(studentDto.getCollege());
+        if (collegeEntity == null) {
+            throw new NotFoundException("Faculdade informada não está cadastrada no sistema");
+        }
 
-        if(classEntity == null)
-        {
-            throw new BadRequestException("Faculdade ou Curso não está cadastrado no sistema");
+        // Verifica se a turma/curso existe nessa faculdade
+        ClassEntity classEntity = classRepository.findByNameAndCourse(studentDto.getCollege(), studentDto.getCourse());
+        if (classEntity == null) {
+            throw new NotFoundException("Turma/Curso não cadastrado para esta faculdade");
         }
 
         studentEntity = StudentEntity.builder()
@@ -53,46 +53,24 @@ public class StudentService {
         studentyRepository.save(studentEntity);
     }
 
-    public List<StudentDto> findAll()
-    {
-        List<StudentEntity> studentEntityList = studentyRepository.findAll();
-        List <StudentDto> studentDtosList = new ArrayList<>();
-
-        for(int i = 0; i < studentEntityList.size(); i++)
-        {
-            StudentEntity studentEntity = studentEntityList.get(i);
-            StudentDto studentDto = StudentDto.builder()
-                    .name(studentEntity.getName())
-                    .email(studentEntity.getEmail())
-                    .matricula(studentEntity.getMatricula())
-                    .college(studentEntity.getCollege())
-                    .course(studentEntity.getCourse())
-                    .build();
-
-            studentDtosList.add(studentDto);
-        }
-
-        return studentDtosList;
-
+    public List<StudentDto> findAllStudents() {
+        return studentyRepository.findAll().stream()
+                .map(this::toDto)
+                .toList();
     }
 
-    public void update(StudentDto studentDto, Integer id) throws NotFoundException, BadRequestException {
-
+    public void updateStudent(StudentDto studentDto, Integer id) throws NotFoundException, BadRequestException {
         StudentEntity studentEntity = studentyRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Estudante não cadastrada"));
+                .orElseThrow(() -> new NotFoundException("Estudante não cadastrado"));
 
         CollegeEntity collegeEntity = collegeRepository.findByName(studentDto.getCollege());
-
-        if(collegeEntity == null)
-        {
-            throw new BadRequestException("Faculdade não cadastrada");
+        if (collegeEntity == null) {
+            throw new NotFoundException("Faculdade não cadastrada");
         }
 
         ClassEntity classEntity = classRepository.findByNameAndCourse(studentDto.getCollege(), studentDto.getCourse());
-
-        if(classEntity == null)
-        {
-            throw new BadRequestException("Curso não cadastrado na faculdade");
+        if (classEntity == null) {
+            throw new NotFoundException("Curso não cadastrado na faculdade");
         }
 
         studentEntity.setName(studentDto.getName());
@@ -105,14 +83,24 @@ public class StudentService {
         studentyRepository.save(studentEntity);
     }
 
-
-    public void delete(Integer id) throws NotFoundException {
+    public void deleteStudent(Integer id) throws NotFoundException {
         StudentEntity studentEntity = studentyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Aluno não cadastrado"));
 
-        if(studentEntity.getCollege() != null) {
+        if (studentEntity.getClas() != null && studentEntity.getClas().getStudentList() != null) {
             studentEntity.getClas().getStudentList().remove(studentEntity);
         }
         studentyRepository.delete(studentEntity);
+    }
+
+    private StudentDto toDto(StudentEntity studentEntity) {
+        return StudentDto.builder()
+                .id(studentEntity.getId())
+                .name(studentEntity.getName())
+                .email(studentEntity.getEmail())
+                .matricula(studentEntity.getMatricula())
+                .college(studentEntity.getCollege())
+                .course(studentEntity.getCourse())
+                .build();
     }
 }
