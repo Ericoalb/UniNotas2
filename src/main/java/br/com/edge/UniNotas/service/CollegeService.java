@@ -36,12 +36,12 @@ public class CollegeService {
     }
 
     public List<String> listClassesByCollegeId(Integer id) throws NotFoundException {
-        // Verifica se a faculdade existe antes de buscar as turmas
+
         if (!collegeRepository.existsById(id)) {
             throw new NotFoundException("Faculdade não cadastrada no sistema");
         }
 
-        // Busca os cursos diretamente pelo banco de dados (sem for manual)
+
         List<String> listCourses = classRepository.findCoursesByCollegeId(id);
 
         if (listCourses.isEmpty()) {
@@ -64,13 +64,13 @@ public class CollegeService {
 
         List<ClassEntity> listClass = classRepository.findAllByNamejpql(collegeEntity.getName());
 
-        // Atualizando o nome na tabela de Turmas
+
         for (ClassEntity classEntity : listClass) {
             classEntity.setName(collegeDto.getName());
             classRepository.save(classEntity);
         }
 
-        // Atualizando na própria tabela da faculdade
+
         collegeEntity.setName(collegeDto.getName());
         collegeEntity.setCnpj(collegeDto.getCnpj());
         collegeRepository.save(collegeEntity);

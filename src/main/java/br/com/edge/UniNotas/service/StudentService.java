@@ -29,13 +29,13 @@ public class StudentService {
             throw new BadRequestException("Aluno já cadastrado no sistema");
         }
 
-        // Verifica se a faculdade existe
+
         CollegeEntity collegeEntity = collegeRepository.findByName(studentDto.getCollege());
         if (collegeEntity == null) {
             throw new NotFoundException("Faculdade informada não está cadastrada no sistema");
         }
 
-        // Verifica se a turma/curso existe nessa faculdade
+
         ClassEntity classEntity = classRepository.findByNameAndCourse(studentDto.getCollege(), studentDto.getCourse());
         if (classEntity == null) {
             throw new NotFoundException("Turma/Curso não cadastrado para esta faculdade");

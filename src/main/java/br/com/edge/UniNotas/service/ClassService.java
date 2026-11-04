@@ -26,7 +26,7 @@ public class ClassService {
 
     @Transactional
     public void saveClass(ClassDto classDto) throws BadRequestException, NotFoundException {
-        // Verifica se a faculdade existe antes de cadastrar a turma
+
         CollegeEntity collegeEntity = collegeRepository.findByName(classDto.getName());
         if (collegeEntity == null) {
             throw new NotFoundException("Não é possível cadastrar uma turma em uma faculdade não registrada no sistema");
@@ -73,7 +73,7 @@ public class ClassService {
         ClassEntity classEntity = classRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Classe não cadastrada"));
 
-        // Verifica se a faculdade existe antes de atualizar
+
         CollegeEntity collegeEntity = collegeRepository.findByName(classDto.getName());
         if (collegeEntity == null) {
             throw new NotFoundException("Faculdade informada não está cadastrada no sistema");

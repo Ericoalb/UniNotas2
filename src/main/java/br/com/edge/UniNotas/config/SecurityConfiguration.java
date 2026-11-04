@@ -26,21 +26,20 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Rotas públicas (login/autenticação e documentação Swagger)
+
                         .requestMatchers("/v1/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // 2. Rotas de consulta (GET): permitidas para perfis ALUNO e ADMIN
-                        .requestMatchers(HttpMethod.GET,
+                                                .requestMatchers(HttpMethod.GET,
                                 "/v1/colleges/**", "/v1/classes/**", "/v1/students/**",
                                 "/v1/college/**", "/v1/class/**", "/v1/student/**")
                         .hasAnyAuthority("ALUNO", "ROLE_ALUNO", "ADMIN", "ROLE_ADMIN")
 
-                        // 3. Exclusões (DELETE): exclusivas para perfil ADMIN
+
                         .requestMatchers(HttpMethod.DELETE, "/v1/**")
                         .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 
-                        // 4. Criação e atualização de Faculdades e Turmas (POST e PUT): apenas ADMIN
+
                         .requestMatchers(HttpMethod.POST,
                                 "/v1/colleges/**", "/v1/classes/**",
                                 "/v1/college/**", "/v1/class/**")
@@ -50,7 +49,7 @@ public class SecurityConfiguration {
                                 "/v1/college/**", "/v1/class/**")
                         .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 
-                        // 5. Criação e atualização de Estudantes (POST e PUT): ALUNO e ADMIN
+
                         .requestMatchers(HttpMethod.POST,
                                 "/v1/students/**", "/v1/student/**")
                         .hasAnyAuthority("ALUNO", "ROLE_ALUNO", "ADMIN", "ROLE_ADMIN")
@@ -58,7 +57,7 @@ public class SecurityConfiguration {
                                 "/v1/students/**", "/v1/student/**")
                         .hasAnyAuthority("ALUNO", "ROLE_ALUNO", "ADMIN", "ROLE_ADMIN")
 
-                        // 6. Qualquer outra rota exige autenticação JWT
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
