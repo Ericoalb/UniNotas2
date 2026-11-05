@@ -1,12 +1,15 @@
 package br.com.edge.UniNotas.service;
 
+import br.com.edge.UniNotas.config.TokenProvider;
 import br.com.edge.UniNotas.database.model.ClassEntity;
 import br.com.edge.UniNotas.database.model.CollegeEntity;
 import br.com.edge.UniNotas.database.model.StudentEntity;
 import br.com.edge.UniNotas.database.repository.IClassRepository;
 import br.com.edge.UniNotas.database.repository.ICollegeRepository;
 import br.com.edge.UniNotas.database.repository.IStudentyRepository;
+import br.com.edge.UniNotas.dto.LoginDto;
 import br.com.edge.UniNotas.dto.StudentDto;
+import br.com.edge.UniNotas.dto.TokenDto;
 import br.com.edge.UniNotas.exception.BadRequestException;
 import br.com.edge.UniNotas.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,18 @@ public class StudentService {
     private final IStudentyRepository studentyRepository;
     private final IClassRepository classRepository;
     private final ICollegeRepository collegeRepository;
+    private final TokenProvider tokenProvider;
+
+    public TokenDto login(LoginDto loginDto) throws NotFoundException {
+        StudentEntity student = studentyRepository.findByEmail(loginDto.getEmail());
+
+        if (student == null) {
+            throw new NotFoundException("Usuário não encontrado com o e-mail informado");
+        }
+
+        String token = tokenProvider.gerarToken(student.getEmail());
+        return new TokenDto(token);
+    }
 
     public void saveStudent(StudentDto studentDto) throws NotFoundException, BadRequestException {
         StudentEntity studentEntity = studentyRepository.findByEmail(studentDto.getEmail());
@@ -29,13 +44,13 @@ public class StudentService {
             throw new BadRequestException("Aluno já cadastrado no sistema");
         }
 
-
+        // Verifica se a faculdade existe
         CollegeEntity collegeEntity = collegeRepository.findByName(studentDto.getCollege());
         if (collegeEntity == null) {
             throw new NotFoundException("Faculdade informada não está cadastrada no sistema");
         }
 
-
+        // Verifica se a turma/curso existe nessa faculdade
         ClassEntity classEntity = classRepository.findByNameAndCourse(studentDto.getCollege(), studentDto.getCourse());
         if (classEntity == null) {
             throw new NotFoundException("Turma/Curso não cadastrado para esta faculdade");
