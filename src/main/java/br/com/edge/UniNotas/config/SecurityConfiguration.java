@@ -31,7 +31,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
                                                 .requestMatchers(HttpMethod.GET,
-                                "/v1/colleges/**", "/v1/classes/**", "/v1/students/**",
+                                "/v1/colleges/**", "/v1/class/**", "/v1/students/**",
                                 "/v1/college/**", "/v1/class/**", "/v1/student/**")
                         .hasAnyAuthority("ALUNO", "ROLE_ALUNO", "ADMIN", "ROLE_ADMIN")
 
@@ -41,11 +41,11 @@ public class SecurityConfiguration {
 
 
                         .requestMatchers(HttpMethod.POST,
-                                "/v1/colleges/**", "/v1/classes/**",
+                                "/v1/colleges/**", "/v1/class/**",
                                 "/v1/college/**", "/v1/class/**")
                         .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT,
-                                "/v1/colleges/**", "/v1/classes/**",
+                                "/v1/colleges/**", "/v1/class/**",
                                 "/v1/college/**", "/v1/class/**")
                         .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 

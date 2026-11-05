@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/classes")
+@RequestMapping("/v1/class")
 @Validated
 public class ClassController {
 
