@@ -3,11 +3,13 @@ package br.com.edge.UniNotas.service;
 import br.com.edge.UniNotas.config.TokenProvider;
 import br.com.edge.UniNotas.database.model.ClassEntity;
 import br.com.edge.UniNotas.database.model.CollegeEntity;
+import br.com.edge.UniNotas.database.model.RefreshTokenEntity;
 import br.com.edge.UniNotas.database.model.StudentEntity;
 import br.com.edge.UniNotas.database.repository.IClassRepository;
 import br.com.edge.UniNotas.database.repository.ICollegeRepository;
 import br.com.edge.UniNotas.database.repository.IStudentyRepository;
 import br.com.edge.UniNotas.dto.LoginDto;
+import br.com.edge.UniNotas.dto.RefreshTokenRequestDto;
 import br.com.edge.UniNotas.dto.StudentDto;
 import br.com.edge.UniNotas.dto.TokenDto;
 import br.com.edge.UniNotas.exception.BadRequestException;
@@ -25,6 +27,7 @@ public class StudentService {
     private final IClassRepository classRepository;
     private final ICollegeRepository collegeRepository;
     private final TokenProvider tokenProvider;
+    private final RefreshTokenService refreshTokenService;
 
     public TokenDto login(LoginDto loginDto) throws NotFoundException {
         StudentEntity student = studentyRepository.findByEmail(loginDto.getEmail());
@@ -33,8 +36,28 @@ public class StudentService {
             throw new NotFoundException("Usuário não encontrado com o e-mail informado");
         }
 
-        String token = tokenProvider.gerarToken(student.getEmail());
-        return new TokenDto(token);
+        String accessToken = tokenProvider.gerarToken(student.getEmail());
+        RefreshTokenEntity refreshToken = refreshTokenService.createRefreshToken(student);
+
+        return TokenDto.builder()
+                .token(accessToken)
+                .refreshToken(refreshToken.getToken())
+                .build();
+    }
+
+    public TokenDto refreshToken(RefreshTokenRequestDto requestDto) throws NotFoundException, BadRequestException {
+        RefreshTokenEntity refreshToken = refreshTokenService.findByToken(requestDto.getRefreshToken())
+                .orElseThrow(() -> new NotFoundException("Refresh token não encontrado no sistema"));
+
+        refreshToken = refreshTokenService.verifyExpiration(refreshToken);
+
+        StudentEntity student = refreshToken.getStudent();
+        String newAccessToken = tokenProvider.gerarToken(student.getEmail());
+
+        return TokenDto.builder()
+                .token(newAccessToken)
+                .refreshToken(refreshToken.getToken())
+                .build();
     }
 
     public void saveStudent(StudentDto studentDto) throws NotFoundException, BadRequestException {
