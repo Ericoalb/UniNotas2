@@ -6,6 +6,7 @@ import br.com.edge.UniNotas.database.repository.IStudentyRepository;
 import br.com.edge.UniNotas.database.repository.RolesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
@@ -18,6 +19,7 @@ public class DataLoader implements CommandLineRunner {
 
     private final RolesRepository rolesRepository;
     private final IStudentyRepository studentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
@@ -33,13 +35,15 @@ public class DataLoader implements CommandLineRunner {
                 ));
 
 
-        if (studentRepository.findByEmail("admin@uninotas.com") == null) {
+        StudentEntity admin = studentRepository.findByEmail("admin@uninotas.com");
+        if (admin == null) {
             Set<RolesEntity> roles = new HashSet<>();
             roles.add(adminRole);
 
-            StudentEntity admin = StudentEntity.builder()
+            admin = StudentEntity.builder()
                     .name("Administrador")
                     .email("admin@uninotas.com")
+                    .password(passwordEncoder.encode("admin123"))
                     .matricula(1001)
                     .college("UniNotas")
                     .course("Administração")
@@ -47,14 +51,25 @@ public class DataLoader implements CommandLineRunner {
                     .build();
 
             studentRepository.save(admin);
+        } else if (admin.getPassword() == null || admin.getPassword().isBlank()) {
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            studentRepository.save(admin);
         }
 
 
         List<StudentEntity> alunosExistentes = studentRepository.findAll();
         for (StudentEntity aluno : alunosExistentes) {
+            boolean updated = false;
             if (!"admin@uninotas.com".equals(aluno.getEmail()) &&
                     (aluno.getRoles() == null || aluno.getRoles().isEmpty())) {
                 aluno.getRoles().add(alunoRole);
+                updated = true;
+            }
+            if (aluno.getPassword() == null || aluno.getPassword().isBlank()) {
+                aluno.setPassword(passwordEncoder.encode("123456"));
+                updated = true;
+            }
+            if (updated) {
                 studentRepository.save(aluno);
             }
         }

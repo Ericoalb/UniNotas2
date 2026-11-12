@@ -22,7 +22,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
-    public TokenDto login(@Valid @RequestBody LoginDto loginDto) throws NotFoundException {
+    public TokenDto login(@Valid @RequestBody LoginDto loginDto) throws NotFoundException, BadRequestException {
         return studentService.login(loginDto);
     }
 

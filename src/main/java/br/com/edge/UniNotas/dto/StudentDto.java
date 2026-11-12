@@ -1,5 +1,6 @@
 package br.com.edge.UniNotas.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -32,4 +33,8 @@ public class StudentDto {
 
     @NotBlank(message = "O curso é obrigatório")
     private String course;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @NotBlank(message = "A senha é obrigatória")
+    private String password;
 }

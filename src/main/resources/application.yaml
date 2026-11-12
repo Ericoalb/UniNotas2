@@ -3,8 +3,8 @@ spring:
     name: UniNotas
   datasource:
     url: jdbc:postgresql://localhost:5432/uninotas?createDatabaseIfNotExist=true
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate

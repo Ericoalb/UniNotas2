@@ -33,6 +33,9 @@ public class StudentEntity implements UserDetails {
     @Column(nullable = false,unique = true)
     private String email;
 
+    @Column(nullable = false)
+    private String password;
+
     @Column(nullable = false, unique = true)
     private Integer matricula;
 
@@ -59,8 +62,8 @@ public class StudentEntity implements UserDetails {
     }
 
     @Override
-    public @Nullable String getPassword() {
-        return "";
+    public String getPassword() {
+        return password;
     }
 
     @Override

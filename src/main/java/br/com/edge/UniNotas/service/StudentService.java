@@ -15,6 +15,7 @@ import br.com.edge.UniNotas.dto.TokenDto;
 import br.com.edge.UniNotas.exception.BadRequestException;
 import br.com.edge.UniNotas.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,12 +29,17 @@ public class StudentService {
     private final ICollegeRepository collegeRepository;
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final PasswordEncoder passwordEncoder;
 
-    public TokenDto login(LoginDto loginDto) throws NotFoundException {
+    public TokenDto login(LoginDto loginDto) throws NotFoundException, BadRequestException {
         StudentEntity student = studentyRepository.findByEmail(loginDto.getEmail());
 
         if (student == null) {
             throw new NotFoundException("Usuário não encontrado com o e-mail informado");
+        }
+
+        if (!passwordEncoder.matches(loginDto.getPassword(), student.getPassword())) {
+            throw new BadRequestException("Senha incorreta");
         }
 
         String accessToken = tokenProvider.gerarToken(student.getEmail());
@@ -67,13 +73,13 @@ public class StudentService {
             throw new BadRequestException("Aluno já cadastrado no sistema");
         }
 
-        // Verifica se a faculdade existe
+
         CollegeEntity collegeEntity = collegeRepository.findByName(studentDto.getCollege());
         if (collegeEntity == null) {
             throw new NotFoundException("Faculdade informada não está cadastrada no sistema");
         }
 
-        // Verifica se a turma/curso existe nessa faculdade
+
         ClassEntity classEntity = classRepository.findByNameAndCourse(studentDto.getCollege(), studentDto.getCourse());
         if (classEntity == null) {
             throw new NotFoundException("Turma/Curso não cadastrado para esta faculdade");
@@ -82,6 +88,7 @@ public class StudentService {
         studentEntity = StudentEntity.builder()
                 .name(studentDto.getName())
                 .email(studentDto.getEmail())
+                .password(passwordEncoder.encode(studentDto.getPassword()))
                 .matricula(studentDto.getMatricula())
                 .college(studentDto.getCollege())
                 .course(studentDto.getCourse())
@@ -113,6 +120,9 @@ public class StudentService {
 
         studentEntity.setName(studentDto.getName());
         studentEntity.setEmail(studentDto.getEmail());
+        if (studentDto.getPassword() != null && !studentDto.getPassword().isBlank()) {
+            studentEntity.setPassword(passwordEncoder.encode(studentDto.getPassword()));
+        }
         studentEntity.setMatricula(studentDto.getMatricula());
         studentEntity.setCollege(studentDto.getCollege());
         studentEntity.setCourse(studentDto.getCourse());
