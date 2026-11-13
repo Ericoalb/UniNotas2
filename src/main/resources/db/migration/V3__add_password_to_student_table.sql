@@ -1,0 +1,5 @@
+ALTER TABLE student ADD COLUMN IF NOT EXISTS password VARCHAR(255);
+
+UPDATE student SET password = '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG' WHERE password IS NULL;
+
+ALTER TABLE student ALTER COLUMN password SET NOT NULL;
